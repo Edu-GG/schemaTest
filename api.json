@@ -1,0 +1,551 @@
+{
+    "openapi" : "3.0.3",
+    "info" : {
+        "title" : "CSC API",
+        "description" : "API for the collection of Child Social Care data",
+        "version" : "0.4.0"
+    },
+    "servers" : [
+        {
+            "url" : "http://localhost:5000",
+            "description" : "Craig's Mock Server"
+        }
+    ],
+    "paths" : {
+        "/children_social_care_data/{la_code}/children" : {
+            "post" : {
+                "summary" : "Submit data to the DfE",
+                "description" : "Submit child social care data to the DfE",
+                "requestBody" : {
+                    "content" : {
+                        "application/json" : {
+                            "schema" : {
+                                "$ref" : "#/components/schemas/CSC"
+                            }
+                        }
+                    }
+                },
+                "responses" : {
+                    "200" : {
+                        "description" : "Data received",
+                        "content" : {
+                            "application/json" : {
+                                "schema" : {
+                                    "$ref" : "#/components/schemas/Receipt"
+                                }
+                            }
+                        }
+                    },
+                    "204" : {
+                        "description" : "No content"
+                    },
+                    "400" : {
+                        "description" : "Payload was malformed"
+                    },
+                    "401" : {
+                        "description" : "Unauthorized Access"
+                    },
+                    "403" : {
+                        "description" : "Forbidden Access"
+                    },
+                    "413" : {
+                        "description" : "Too many records"
+                    },
+                    "429" : {
+                        "description" : "Too many requests"
+                    }
+                }
+            },
+            "parameters" : [
+                {
+                  "name": "la_code",
+                  "in": "path",
+                  "description": "3 digit Local Authority Code as known by the DfE",
+                  "required": true,
+                  "schema": {
+                    "type": "integer",
+                    "maximum" : 999
+                  }
+                }
+              ]
+        }
+    },
+    "components" : {
+        "schemas" : {
+        "CSC" : {
+                "type" : "array",
+                "title" : "JSON Schema for CSC Data API",
+                "description": "Array containing individual objects representing the details and social care attributes of the child.",
+                "items" : {
+                    "type" : "object",
+                    "properties" : {
+                        "la_child_id" : {
+                            "type" : "string",
+                            "description" : "Unique child identifier as held by the Local Authority. This is used as the core identifier for a child."
+                        },
+                        "mis_child_id" : {
+                            "type" : "string",
+                            "description" : "Unique child identifier as held by the Supplier. This is not required."
+                        },
+                        "purge" : {
+                            "type" : "boolean",
+                            "description" : "Flag to indicate if this record is to be purged from the system. Default value of False",
+                            "default" : false
+                        },
+                        "child_details" : {
+                            "type" : "object",
+                            "description" : "Section containing personal details on the child",
+                            "properties" : {
+                                "unique_pupil_number" : {
+                                    "type" : "string",
+                                    "description" : "Unique Pupil Number (UPN) for the child, if available",
+                                    "minLength" : 13,
+                                    "maxLength" : 13
+                                },
+                                "former_unique_pupil_number" : {
+                                    "type" : "string",
+                                    "description" : "A former Unique Pupil Number (UPN) assigned to the child, if different to the current UPN",
+                                    "minLength" : 13,
+                                    "maxLength" : 13
+                                },
+                                "unique_pupil_number_unknown_reason" : {
+                                    "type" : "string",
+                                    "description" : "Optional reason as to why a Unique Pupil Number (UPN) can not be provided for this child, selected from a list of possible codes",
+                                    "maxLength" : 3
+                                },
+                                "first_name" : {
+                                    "type" : "string",
+                                    "description" : "Given First name of the child"
+                                },
+                                "surname" : {
+                                    "type" : "string",
+                                    "description" : "Given Surname of the child"
+                                },
+                                "date_of_birth" : {
+                                    "type" : "string",
+                                    "format" : "date",
+                                    "description" : "Date of birth of the child. If the exact date of birth is not known, record an approximate date of birth based on the child's estimated age at date of referral"
+                                },
+                                "expected_date_of_birth" : {
+                                    "type" : "string",
+                                    "format" : "date",
+                                    "description" : "Expected date of birth (due date) for a child who is unborn at the time of referral"
+                                },
+                                "gender" : {
+                                    "type" : "string",
+                                    "description" : "Gender of the child, selected from a list of possible codes",
+                                    "maxLength" : 16
+                                },
+                                "ethnicity" : {
+                                    "type" : "string",
+                                    "description" : "Ethnicity of the child, selected from a list of possible codes",
+                                    "maxLength" : 4
+                                },
+                                "disabilities" : {
+                                    "type" : "array",
+                                    "description" : "List of disabilities attributed to the child",
+                                    "items" : {
+                                        "type" : "string",
+                                        "description" : "Individual disability attributed with the child, selected from a list of possible codes",
+                                        "maxLength" : 4
+                                    }
+                                },
+                                "postcode" : {
+                                    "type" : "string",
+                                    "description" : "Home Postcode of the child",
+                                    "maxLength" : 8
+                                },
+                                "uasc_flag" : {
+                                    "type" : "boolean",
+                                    "description" : "Flag to indicate if the child is an Unaccompanied Asylum Seeking Child (UASC)"
+                                },
+                                "uasc_end_date" : {
+                                    "type" : "string",
+                                    "description" : "Date when the child ceased to be an Unaccompanied Asylum Seeking Child (UASC). This attribute should be blank if the child has never been a UASC or the child is currently a UASC.",
+                                    "format" : "date"
+                                }
+                            }
+                        },
+                        "health_and_wellbeing" : {
+                            "type" : "object",
+                            "properties" : {
+                                "sdq_assessments" : {
+                                    "type" : "array",
+                                    "items" : {
+                                        "type" : "object",
+                                        "properties" : {
+                                            "date" : {
+                                                "type" : "string",
+                                                "format" : "date"
+                                            },
+                                            "score" : {
+                                                "type" : "number"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "education_health_care_plans" : {
+                            "type" : "array",
+                            "description" : "Details on requests for Education, Health and Care (EHC) plans. The details within this section align closely with the current annual special educational needs survey (person level SEN2 return).",
+                            "items" : {
+                                "type" : "object",
+                                "properties" : {
+                                    "education_health_care_plan_id" : {
+                                        "type" : "string",
+                                        "description" : "Unique ID associated with the Educational, Health and Care plan. This ID should be consistent through all stages of the process, from initial request through to the issued plan."
+                                    },
+                                    "request_received_date" : {
+                                        "type" : "string",
+                                        "description" : "Date the request for an EHC needs assessment was received.",
+                                        "format" : "date"
+                                    },
+                                    "request_outcome_date" : {
+                                        "type" : "string",
+                                        "description" : "Date the parent or young person was informed of the decision about whether the local authority agrees to the request for an assessment.",
+                                        "format" : "date"
+                                    },
+                                    "assessment_outcome_date" : {
+                                        "type" : "string",
+                                        "description" : "Either the date on which the final EHC plan was issued, or the date on which the parent or young person was notified of decision not to issue a plan",
+                                        "format" : "date"
+                                    },
+                                    "plan_start_date" : {
+                                        "type" : "string",
+                                        "description" : "Date the child or young person's EHC plan first started.",
+                                        "format" : "date"
+                                    }
+                                },
+                                "required" : [
+                                    "education_health_care_plan_id"
+                                ]
+                            }
+                        },
+                        "social_care_episodes" : {
+                            "type" : "array",
+                            "description" : "Details on social care episodes related to the Child. This includes details covering both Children in Need (CiN) and Children Looked After (CLA).",
+                            "items" : {
+                                "type" : "object",
+                                "properties" : {
+                                    "social_care_episode_id" : {
+                                        "type" : "string",
+                                        "description" : "Unique identifier for the overall social care episode"
+                                    },
+                                    "referral_date" : {
+                                        "type" : "string",
+                                        "format" : "date",
+                                        "description" : "Date the child was referred to children's social services"
+                                    },
+                                    "referral_source" : {
+                                        "type" : "string",
+                                        "maxLength" : 2,
+                                        "description" : "Souce of the referral to social services, selected from a list of possible codes"
+                                    },
+                                    "referral_no_further_action_flag" : {
+                                        "type" : "boolean",
+                                        "description" : "Flag indicating whether any further action was taken following the initial referral."
+                                    },
+                                    "closure_date" : {
+                                        "type" : "string",
+                                        "format" : "date",
+                                        "description" : "Date the episode of care ended for this child"
+                                    },
+                                    "closure_reason" : {
+                                        "type" : "string",
+                                        "maxLength" : 3,
+                                        "description" : "Reason the episode of care ended for this child, selected from a list of possible codes"
+                                    },
+                                    "care_worker_details" : {
+                                        "type" : "array",
+                                        "description" : "Details on the social care workers managing this social care episode",
+                                        "items" : {
+                                            "type" : "object",
+                                            "properties" : {
+                                                "worker_id" : {
+                                                    "type" : "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "child_and_family_assessments" : {
+                                        "type" : "array",
+                                        "description" : "Details on child and family assessments carried out to assess the needs of a Child referred to social services",
+                                        "items" : {
+                                            "type" : "object",
+                                            "properties" : {
+                                                "child_and_family_assessment_id" : {
+                                                    "type" : "string",
+                                                    "description" : "Unique identifier for the child and family assessment"
+                                                },
+                                                "start_date" : {
+                                                    "type" : "string",
+                                                    "description" : "Date the assessment was started",
+                                                    "format" : "date"
+                                                },
+                                                "authorisation_date" : {
+                                                    "type" : "string",
+                                                    "description" : "Date the assessment was completed and authorised",
+                                                    "format" : "date"
+                                                },
+                                                "factors" : {
+                                                    "type" : "array",
+                                                    "description" : "Array of all factors identified at the end of an assessment. More detailed information on assessment factors can be found within this article: https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/977581/CIN_Additional_guide_on_the_factors_identified_at_the_end_of_assessment.pdf",
+                                                    "items" : {
+                                                        "type" : "string",
+                                                        "maxLength" : 3,
+                                                        "description" : "An individual factor identified at the end of an assessment, selected from a list of possible codes"
+                                                    }
+                                                }
+                                            },
+                                            "required" : [
+                                                "child_and_family_assessment_id"
+                                            ]
+                                        }
+                                    },
+                                    "child_in_need_plans" : {
+                                        "type" : "array",
+                                        "items" : {
+                                            "type" : "object",
+                                            "properties" : {
+                                                "child_in_need_plan_id" : {
+                                                    "type" : "string"
+                                                },
+                                                "start_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                },
+                                                "end_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                }
+                                            },
+                                            "required" : [
+                                                "child_in_need_plan_id"
+                                            ]
+                                        }
+                                    },
+                                    "section_47_assessments" : {
+                                        "type" : "array",
+                                        "items" : {
+                                            "type" : "object",
+                                            "properties" : {
+                                                "section_47_assessment_id" : {
+                                                    "type" : "string"
+                                                },
+                                                "start_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                },
+                                                "icpc_required_flag" : {
+                                                    "type" : "boolean"
+                                                },
+                                                "icpc_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                }
+                                            },
+                                            "required" : [
+                                                "section_47_assessment_id"
+                                            ]
+                                        }
+                                    },
+                                    "child_protection_plans" : {
+                                        "type" : "array",
+                                        "items" : {
+                                            "type" : "object",
+                                            "properties" : {
+                                                "child_protection_plan_id" : {
+                                                    "type" : "string"
+                                                },
+                                                "start_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                },
+                                                "end_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                }
+                                            },
+                                            "required" : [
+                                                "child_protection_plan_id"
+                                            ]
+                                        }
+                                    },
+                                    "child_looked_after_placements" : {
+                                        "type" : "array",
+                                        "items" : {
+                                            "type" : "object",
+                                            "properties" : {
+                                                "child_looked_after_placement_id" : {
+                                                    "type" : "string"
+                                                },
+                                                "start_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                },
+                                                "start_reason" : {
+                                                    "type" : "string"
+                                                },
+                                                "placement_type" : {
+                                                    "type" : "string"
+                                                },
+                                                "postcode" : {
+                                                    "type": "string",
+                                                    "maxLength" : 8
+                                                },
+                                                "end_date" : {
+                                                    "type" : "string",
+                                                    "format" : "date"
+                                                },
+                                                "end_reason" : {
+                                                    "type" : "string"
+                                                },
+                                                "change_reason" : {
+                                                    "type" : "string"
+                                                }
+                                            },
+                                            "required" : [
+                                                "child_looked_after_placement_id"
+                                            ]
+                                        }
+                                    },
+                                    "adoption" : {
+                                        "type" : "object",
+                                        "properties" : {
+                                            "initial_decision_date" : {
+                                                "type" : "string",
+                                                "format" : "date"
+                                            },
+                                            "matched_date" : {
+                                                "type" : "string",
+                                                "format" : "date"
+                                            },
+                                            "placed_date" : {
+                                                "type" : "string",
+                                                "format" : "date"
+                                            }
+                                        }
+                                    },
+                                    "care_leavers" : {
+                                        "type" : "object",
+                                        "properties" : {
+                                            "activity" : {
+                                                "type" : "string"
+                                            },
+                                            "accommodation" : {
+                                                "type" : "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "required" : [
+                                    "social_care_episode_id"
+                                ]
+                            }
+                        }
+                    },
+                    "required" : [
+                        "la_child_id"
+                    ],
+                    "example" : {
+                        "la_child_id" : "Child1234",
+                        "mis_child_id" : "Supplier-Child-1234",
+                        "child_details" : {
+                            "unique_pupil_number" : "ABC0123456789",
+                            "former_unique_pupil_number" : "DEF0123456789",
+                            "unique_pupil_number_unknown_reason" : "UN1",
+                            "first_name" : "John",
+                            "surname" : "Doe",
+                            "date_of_birth" : "2022-06-14",
+                            "expected_date_of_birth" : "2022-06-14",
+                            "gender" : "Male",
+                            "ethnicity" : "WBRI",
+                            "disabilities" : [
+                                "HAND",
+                                "VIS"
+                            ],
+                            "postcode" : "AB12 3DE",
+                            "uasc_flag" : true,
+                            "uasc_end_date" : "2022-06-14"
+                        },
+                        "health_and_wellbeing" : {
+                            "sdq_assessments" : [{
+                                "date" : "2022-06-14",
+                                "score" : 20
+                            }]
+                        },
+                        "education_health_care_plans" : [{
+                            "education_health_care_plan_id" : "ABC123456",
+                            "request_received_date" : "2022-06-14",
+                            "request_outcome_date" : "2022-06-14",
+                            "assessment_outcome_date" : "2022-06-14",
+                            "plan_start_date" : "2022-06-14"
+                        }],
+                        "social_care_episodes" : [{
+                            "social_care_episode_id" : "ABC123456",
+                            "referral_date" : "2022-06-14",
+                            "referral_source" : "AB12",
+                            "referral_no_further_action_flag" : false,
+                            "care_worker_details" : [{
+                                "worker_id" : "ABC123"
+                            }],
+                            "child_and_family_assessments" : [{
+                                "child_and_family_assessment_id" : "ABC123456",
+                                "start_date" : "2022-06-14",
+                                "authorisation_date" : "2022-06-14",
+                                "factors" : [
+                                    "1C",
+                                    "4A"
+                                ]
+                            }],
+                            "child_in_need_plans": [{
+                                "child_in_need_plan_id": "ABC123456",
+                                "start_date": "2022-06-14",
+                                "end_date": "2022-06-14"
+                            }],
+                            "section_47_assessments": [{
+                                "section_47_assessment_id": "ABC123456",
+                                "start_date": "2022-06-14",
+                                "icpc_required_flag": true,
+                                "icpc_date": "2022-06-14"
+                            }],
+                            "child_protection_plans": [{
+                                "child_protection_plan_id": "ABC123456",
+                                "start_date": "2022-06-14",
+                                "end_date": "2022-06-14"
+                            }],
+                            "child_looked_after_placements": [{
+                                "child_looked_after_placement_id": "ABC123456",
+                                "start_date": "2022-06-14",
+                                "start_reason": "S",
+                                "placement_type": "K1",
+                                "postcode": "AB12 3DE",
+                                "end_date": "2022-06-14",
+                                "end_reason": "E3",
+                                "change_reason": "CHILD"
+                            }],
+                            "adoption" : {
+                                "initial_decision_date" : "2022-06-14",
+                                "matched_date" : "2022-06-14",
+                                "placed_date" : "2022-06-14"
+                            },
+                            "care_leavers" : {
+                                "activity" : "F2",
+                                "accommodation" : "D"
+                            },
+                            "closure_date": "2022-06-14",
+                            "closure_reason": "AB12"
+                        }],
+                        "purge" : false
+                    }
+                },
+                "maxItems" : 100
+            },
+            "Receipt" : {
+                "type" : "string",
+                "format" : "uuid"
+            }
+        }
+    }
+}
